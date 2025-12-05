@@ -1,18 +1,41 @@
 #include "mbed.h"
 
 DigitalOut buzzer(PC_8);
-DigitalIn button(PC_13); // B1
+
+void beep(int on_ms, int off_ms) {
+    buzzer = 1;
+    ThisThread::sleep_for(std::chrono::milliseconds(on_ms));
+    buzzer = 0;
+    ThisThread::sleep_for(std::chrono::milliseconds(off_ms));
+}
 
 int main() {
-    button.mode(PullNone);   // IMPORTANT! B1 has HW pull-down on board
 
     while (1) {
-        if (button.read() == 1) {   // Pressed
-            buzzer = 1;
-        } else {
-            buzzer = 0;
-        }
 
-        ThisThread::sleep_for(10ms);
+        // --- First phrase ---
+        beep(200,100);
+        beep(200,100);
+        beep(200,100);
+        beep(400,200);
+
+        beep(200,100);
+        beep(200,100);
+        beep(200,100);
+        beep(400,200);
+
+        // --- Second phrase ---
+        beep(300,100);
+        beep(300,100);
+        beep(300,100);
+        beep(600,200);
+
+        beep(200,100);
+        beep(200,100);
+        beep(200,100);
+        beep(600,300);
+
+        // Small pause between loops
+        ThisThread::sleep_for(500ms);
     }
 }
