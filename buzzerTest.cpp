@@ -1,16 +1,19 @@
 #include "mbed.h"
 
-PwmOut buzzer(PC_8);   // PWM výstup na pin PC_8
+PwmOut buzzer(PC_8);     // PWM výstup na buzzer
+DigitalIn button(PC_13); // USER BUTTON B1
 
 int main() {
-    // Nastaví frekvenciu 2 kHz (PIR buzzery najčastejšie fungujú 1–5 kHz)
-    buzzer.period(1.0f / 2000.0f);  // 2000 Hz
-
-    // 50% výkon (hlasitosť)
-    buzzer.write(0.5f);  
+    button.mode(PullUp);        // B1 je aktívny v log. 0
+    buzzer.period(1.0f / 2000); // 2 kHz tón
 
     while (1) {
-        // Buzzer stále hrá
-        ThisThread::sleep_for(1s);
+        if (button.read() == 0) {   // Stlačené
+            buzzer.write(0.5f);     // 50% hlasitosť
+        } else {
+            buzzer.write(0.0f);     // Off
+        }
+
+        ThisThread::sleep_for(10ms);
     }
 }
