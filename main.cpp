@@ -7,27 +7,28 @@ UnbufferedSerial pc(USBTX, USBRX, 115200);
 int main() {
     pir.mode(PullDown);
 
-    bool lastState = false;     // sledujeme zmenu stavu PIR
+    bool lastState = false;
 
     pc.write("System started.\r\n", 18);
 
     while (1) {
-
         bool motion = pir.read();
 
         if (motion && !lastState) {
-            // PIR práve DETEGOVAL pohyb
-            pc.write("MOTION DETECTED - BUZZER ON\r\n", 30);
+            // PIR práve detegoval pohyb (nábežná hrana)
+            pc.write("MOTION DETECTED\r\n", 19);
+
+            // KRÁTKE PÍPNUTIE – 200 ms
+            buzzer = 1;
+            ThisThread::sleep_for(200ms);
+            buzzer = 0;
         }
 
         if (!motion && lastState) {
-            // PIR práve stratil pohyb
-            pc.write("NO MOTION - BUZZER OFF\r\n", 25);
+            pc.write("NO MOTION\r\n", 11);
         }
 
-        buzzer = motion ? 1 : 0;   // zapni/vypni buzzer podľa PIR
         lastState = motion;
-
-        ThisThread::sleep_for(50ms);
+        ThisThread::sleep_for(20ms);
     }
 }
