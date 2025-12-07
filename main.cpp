@@ -1,43 +1,33 @@
 #include "mbed.h"
-#include "AlarmSystem.h"
-#include "MotionSensor.h"
 
+DigitalOut buzzer(PC_8);        // Aktívny buzzer
+DigitalIn pir(D4);              // PIR OUT → D4
 UnbufferedSerial pc(USBTX, USBRX, 115200);
 
-// Adjust to your board pins:
-#define MOTION_PIN  A0      // Analog PIR / motion sensor read
-#define LED_PIN     LED1    // Alarm LED
-#define BUZZER_PIN  D3      // Active buzzer (DigitalOut)
+int main() {
+    pir.mode(PullDown);
 
-DigitalOut buzzer(BUZZER_PIN);
+    bool lastState = false;     // sledujeme zmenu stavu PIR
 
-int main() 
-{
-    pc.write("System starting...\r\n", 20);
+    pc.write("System started.\r\n", 18);
 
-    MotionSensor motion(MOTION_PIN, 0.25f); // threshold 0.25
-    AlarmSystem alarm(LED_PIN, pc);
+    while (1) {
 
-    while (true)
-    {
-        bool detected = motion.detect_motion();
+        bool motion = pir.read();
 
-        if (detected)
-        {
-            alarm.activate();
-            buzzer = 1;
-        }
-        else
-        {
-            alarm.deactivate();
-            buzzer = 0;
+        if (motion && !lastState) {
+            // PIR práve DETEGOVAL pohyb
+            pc.write("MOTION DETECTED - BUZZER ON\r\n", 30);
         }
 
-        if (alarm.isActive())
-        {
-            alarm.blink(); // LED blink when active
+        if (!motion && lastState) {
+            // PIR práve stratil pohyb
+            pc.write("NO MOTION - BUZZER OFF\r\n", 25);
         }
 
-        ThisThread::sleep_for(200ms);
+        buzzer = motion ? 1 : 0;   // zapni/vypni buzzer podľa PIR
+        lastState = motion;
+
+        ThisThread::sleep_for(50ms);
     }
 }
