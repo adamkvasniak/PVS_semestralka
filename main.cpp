@@ -12,18 +12,24 @@ void send(const char *msg) {
 }
 
 int main() {
-    send("=== BUZZER CONTROL READY ===\r\n");
-    send("Commands: on, off, status, help\r\n");
+    pc.set_blocking(false);   // 🔴 CRITICAL FIX
+
+    send("\r\n=== BUZZER CONTROL READY ===\r\n");
+    send("Commands: on, off, status, help\r\n> ");
 
     while (true) {
-
-        // Ak prisiel znak z konzoly
         char c;
-        if (pc.read(&c, 1) == 1) {
 
-            // Enter → spracuj prikaz
+        // Non-blocking read
+        if (pc.read(&c, 1) > 0) {
+
+            // Echo back so you SEE what you type
+            pc.write(&c, 1);
+
+            // ENTER pressed
             if (c == '\r' || c == '\n') {
                 buffer[pos] = '\0';
+                send("\r\n");
 
                 if (strcmp(buffer, "on") == 0) {
                     buzzer = 1;
@@ -34,30 +40,26 @@ int main() {
                     send("Buzzer: OFF\r\n");
 
                 } else if (strcmp(buffer, "status") == 0) {
-                    if (buzzer.read())
-                        send("Buzzer is ON\r\n");
-                    else
-                        send("Buzzer is OFF\r\n");
+                    send(buzzer.read() ? "Buzzer is ON\r\n" : "Buzzer is OFF\r\n");
 
                 } else if (strcmp(buffer, "help") == 0) {
-                    send("Available commands:\r\n");
-                    send("  on     - turn buzzer ON\r\n");
-                    send("  off    - turn buzzer OFF\r\n");
-                    send("  status - buzzer status\r\n");
-                    send("  help   - this help\r\n");
+                    send("Commands:\r\n");
+                    send("  on\r\n  off\r\n  status\r\n  help\r\n");
 
                 } else if (pos > 0) {
-                    send("Unknown command. Type 'help'\r\n");
+                    send("Unknown command\r\n");
                 }
 
-                pos = 0; // reset buffer
-            } 
+                pos = 0;
+                send("> ");
+            }
             else {
-                // Pridaj znak do buffera, pokial je miesto
-                if (pos < sizeof(buffer) - 1) {
+                if (pos < sizeof(buffer) - 1 && c >= 32) {
                     buffer[pos++] = c;
                 }
             }
         }
+
+        ThisThread::sleep_for(5ms);
     }
 }
